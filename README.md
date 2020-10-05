@@ -36,7 +36,7 @@ const proxy = createProxy({
         '^/api': '/api'
       }
     },
-    '^/api1': {
+    '^/another': {
       target: 'http://xxxx.com'
     }
   }
