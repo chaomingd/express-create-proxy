@@ -1,0 +1,36 @@
+{
+  "name": "express-create-proxy",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "nodemon test/src/index",
+    "server": "node test/src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gitee.com/zeng-chao-ming/express-create-proxy.git"
+  },
+  "keywords": [
+    "express-proxy",
+    "node-proxy",
+    "proxy",
+    "proxy-request",
+    "express-proxy-request",
+    "proxy-request-middleware"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "combined-stream": "^1.0.8",
+    "follow-redirects": "^1.13.0",
+    "mime-types": "^2.1.27",
+    "qs": "^6.9.4",
+    "uuid": "^8.3.0"
+  },
+  "devDependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "multer": "^1.4.2"
+  }
+}

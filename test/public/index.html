@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <input type="file" id="file">
+  <button id="json">json</button>
+  <button id="urlencoded">urlencoded</button>
+  <script>
+    var fileInput = document.getElementById('file')
+    fileInput.addEventListener('change', function (e) {
+      var formData = new FormData()
+      formData.append('test', 'test')
+      formData.append('file', fileInput.files[0])
+      formData.append('params1', 'value1')
+      fetch('/another/file?test=test', {
+        method: 'post',
+        body: formData
+      })
+    })
+
+    const jsonBtn = document.getElementById('json')
+    json.addEventListener('click', function() {
+      // fetch('/api/json', {
+      //   method: 'post',
+      //   body: JSON.stringify({json: 'json'}),
+      //   headers: {
+      //     'Content-Type': 'application/json'
+      //   }
+      // })
+      fetch('/api/proxy-request', {
+        method: 'post',
+        body: JSON.stringify({json: 'json'}),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+    })
+    const urlencodedBtn = document.getElementById('urlencoded')
+    urlencodedBtn.addEventListener('click', function() {
+      fetch('/api/urlencoded', {
+        method: 'post',
+        body: 'urlencoded=urlencoded',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      })
+    })
+
+  </script>
+</body>
+
+</html>
