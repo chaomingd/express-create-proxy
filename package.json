@@ -1,6 +1,6 @@
 {
   "name": "express-create-proxy",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://gitee.com/zeng-chao-ming/express-create-proxy.git"
+    "url": "https://github.com/chaomingd/express-create-proxy.git"
   },
   "keywords": [
     "express-proxy",
