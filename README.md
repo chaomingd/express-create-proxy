@@ -47,7 +47,7 @@ const proxy = createProxy({
 })
 ```
 
-# requestOptions
+# requestOptions   (addtional params data headers for every request)
 ```javascript
 const proxy = createProxy({
   proxy: {
@@ -104,7 +104,10 @@ app.get('/api/test', (req, res) => {
   proxyRequest(req, res, req.baseUrl + req.url, {
     params: {}, // aditional params
     data: {}, // aditional data
-    headers: {} // aditional headers
+    headers: {}, // aditional headers
+    // beforeRequest(req, res, options) {
+    //   return options
+    // }
   })
 })
 ```
@@ -125,7 +128,10 @@ app.post('/api/test', (req, res) => {
         type: 'image/jpeg' // default require('mime-types').lookup(file.path)
       }
     },
-    headers: {}
+    headers: {},
+    // beforeRequest(req, res, options) {
+    //   return options
+    // }
   })
 })
 
@@ -139,12 +145,15 @@ app.post('/api/test', (req, res) => {
         type: 'image/jpeg' // default require('mime-types').lookup(file.path)
       })
     },
-    headers: {}
+    headers: {},
+    // beforeRequest(req, res, options) {
+    //   return options
+    // }
   })
 })
 ```
 
-### FormData
+### 3. FormData
 #### usage
 ```javascript
 const { FormData, request, File } = require('express-create-proxy')

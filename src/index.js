@@ -164,7 +164,9 @@ function resolveJson(req, httpReq, extraData) {
       })
     }
   } else {
-    httpReq.setHeader('content-length', req.get('content-length'))
+    if (req.get('content-length')) {
+      httpReq.setHeader('content-length', req.get('content-length'))
+    }
     req.pipe(httpReq)
   }
 }
@@ -191,13 +193,15 @@ function resolveUrlEncoded(req, httpReq, extraData) {
       })
     }
   } else {
-    httpReq.setHeader('content-length', req.get('content-length'))
+    if (req.get('content-length')) {
+      httpReq.setHeader('content-length', req.get('content-length'))
+    }
     req.pipe(httpReq)
   }
 }
 function resolveMultipart(req, httpReq, extraData) {
-  const contentLength = +req.get('content-length') || 0
   if (extraData) {
+    const contentLength = +req.get('content-length') || 0
     const formData = new FormData()
     const boundary = getBoundaryFromContentType(req.get('content-type'))
     formData.setBoundary(boundary) // set boundary width front client's boundary
@@ -206,7 +210,9 @@ function resolveMultipart(req, httpReq, extraData) {
     httpReq.setHeader('content-length', contentLength + formData.length)
     formData.pipe(httpReq, {hasTail: false})
   } else {
-    httpReq.setHeader('content-length', contentLength)
+    if (req.get('content-length')) {
+      httpReq.setHeader('content-length', req.get('content-length'))
+    }
     req.pipe(httpReq)
   }
 }

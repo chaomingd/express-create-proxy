@@ -26,20 +26,20 @@
 
     const jsonBtn = document.getElementById('json')
     json.addEventListener('click', function() {
-      // fetch('/api/json', {
-      //   method: 'post',
-      //   body: JSON.stringify({json: 'json'}),
-      //   headers: {
-      //     'Content-Type': 'application/json'
-      //   }
-      // })
-      fetch('/api/proxy-request', {
+      fetch('/api/json', {
         method: 'post',
         body: JSON.stringify({json: 'json'}),
         headers: {
           'Content-Type': 'application/json'
         }
       })
+      // fetch('/api/proxy-request', {
+      //   method: 'post',
+      //   body: JSON.stringify({json: 'json'}),
+      //   headers: {
+      //     'Content-Type': 'application/json'
+      //   }
+      // })
     })
     const urlencodedBtn = document.getElementById('urlencoded')
     urlencodedBtn.addEventListener('click', function() {

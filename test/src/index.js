@@ -4,18 +4,15 @@ const path = require('path')
 const bodyParser = require('body-parser')
 const { createProxy, File, proxyRequest, FormData, request } = require('../../src/index')
 const proxy = createProxy({
-  // proxy: {
-  //   '^/api': {
-  //     target: 'http://localhost:3002',
-  //     pathRewrite: {
-  //       '^/api': ''
-  //     }
-  //   },
-  //   '^/another': {
-  //     target: 'http://localhost:3003'
-  //   }
-  // },
-  proxy: 'http://localhost:3003',
+  proxy: {
+    '^/api': {
+      target: 'http://localhost:3002',
+    },
+    '^/another': {
+      target: 'http://localhost:3003'
+    }
+  },
+  // proxy: 'http://localhost:3003',
   requestOptions: {
     data: {
       extraData: 'extraData'
@@ -37,7 +34,7 @@ const proxy = createProxy({
   }
 })
 app.use(express.static(path.resolve(__dirname, '../public')))
-// app.use(proxy)
+app.use(proxy)
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json())
 
