@@ -33,10 +33,9 @@ function isBuf(buf) {
 function isStream (stream) {
   return stream instanceof Stream
 }
+const boundaryReg = /boundary=([\s\S]*)/
 function getBoundaryFromContentType(contentType) {
-  let contentTypes = contentType.split('; ')
-  let boundary = contentTypes[1].split('=')[1]
-  return boundary
+  return boundaryReg.exec(contentType)[1]
 }
 
 const trimReg = /^\s+|\s+$/g

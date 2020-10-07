@@ -18,7 +18,7 @@
       formData.append('test', 'test')
       formData.append('file', fileInput.files[0])
       formData.append('params1', 'value1')
-      fetch('/another/file?test=test', {
+      fetch('/api/file?test=test', {
         method: 'post',
         body: formData
       })
