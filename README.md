@@ -96,7 +96,7 @@ const proxy = createProxy({
 
 
 ## modules
-### 1. proxyRequest
+### 1. proxyRequest (req, res, url, options)
 #### usage
 ```javascript
 const { proxyRequest } = require('express-create-proxy')
@@ -114,11 +114,11 @@ app.get('/api/test', (req, res) => {
 
 ### 2. File
 ##### properties
-- 1. type file's mime type
-- 2. path file's absolute path
-- 3. size file size
-- 4. source file stream (fs.createReadStream(file.path))
-- 5. filename file's name  defaults path.basename(file.path)
+1. type: file's MIME type
+2. path: file's absolute path
+3. size: file size
+4. source: file stream (fs.createReadStream(file.path))
+5. filename: file's name  defaults path.basename(file.path)
 #### usage
 ```javascript
 const { proxyRequest, File } = require('express-create-proxy')
@@ -161,13 +161,14 @@ app.post('/api/test', (req, res) => {
 
 ### 3. FormData
 #### properties
-- 1. form instance of CombinedStream reference to combined-stream
-- 2. boundary multipart/form-data boundary defaults uuidv4()
+1. form: instance of CombinedStream reference to combined-stream
+2. boundary: multipart/form-data boundary defaults uuidv4()
 #### methods
-- 1. getContentType  return `multipart/form-data; boundary=${this.boundary}`
-- 2. getContentLength  get form data's bytelength
-- 3. setBoundary(boundary: String)  set boundary
-- 4. build(data: Object)   build form Data
+1. getContentType:  return `multipart/form-data; boundary=${this.boundary}`
+2. getContentLength:  get form data's bytelength
+3. setBoundary(boundary: String):  set boundary
+4. append(key, value): append data
+5. build(data: Object):   build form Data 
 ````javascript
 const { FormData, File } = require('express-create-proxy')
 const formData = new FormData()
@@ -179,8 +180,20 @@ formData.build({
     path: 'xxxx.jpg'
   }
 })
+// build equal to 
+// const data = {
+//   data1: 'data1',
+//   data2: 'data2',
+//   file: new File('xxxx.jpg'),
+//   file1: {
+//     path: 'xxxx.jpg'
+//   }
+// }
+// Object.keys(data).forEach(key => {
+//   formData.append(key, data[key])
+// })
 ````
-- 5. pipe(src: writeStream, Duplex Transform, options: Object({hasTail: true | false}))
+6. pipe(src: writeStream, Duplex Transform, options: Object({hasTail: true | false}))
 #### usage
 ```javascript
 const { FormData, request, File } = require('express-create-proxy')
