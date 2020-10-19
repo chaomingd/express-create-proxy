@@ -110,6 +110,15 @@ function proxyRequest(req, res, url, httpOptions = {}) {
     },
     ...resetOptions
   })
+  // Ensure we abort proxy if request is aborted
+  req.on('aborted', (e) => {
+    httpReq.abort()
+    console.error(e)
+  })
+  req.on('error', (e) => {
+    httpReq.abort()
+    console.error(e)
+  })
   httpReq.on('response', httpRes => {
     res.status(httpRes.statusCode)
     httpRes.pipe(res)
@@ -118,23 +127,27 @@ function proxyRequest(req, res, url, httpOptions = {}) {
     res.status(500).send(e.message)
     console.error(e)
   })
+  httpReq.on('aborted', e => {
+    res.status(500).send('request aborted')
+  })
   sendRequestData(req, httpReq, resetOptions.data)
+  console.error(e)
 }
 
 const multipartContentType = 'multipart/form-data'
 const jsonContentType = 'application/json'
 const urlEncodedContentType = 'application/x-www-form-urlencoded'
-const noBodyMethods = ['GET', 'HEAD', 'DELETE']
+const noBodyMethods = ['GET', 'HEAD', 'DELETE', 'OPTIONS']
 function sendRequestData(req, httpReq, extraData) {
   if (noBodyMethods.some(method => method === req.method)) {
     httpReq.end()
   } else {
-    const contentType = req.get('content-type').split('; ')[0]
-    if (contentType === jsonContentType) {
+    const contentType = req.get('content-type')
+    if (contentType.indexOf(jsonContentType) > -1) {
       resolveJson(req, httpReq, extraData)
-    } else if (contentType === urlEncodedContentType) {
+    } else if (contentType.indexOf(urlEncodedContentType) > -1) {
       resolveUrlEncoded(req, httpReq, extraData)
-    } else if (contentType === multipartContentType) {
+    } else if (contentType.indexOf(multipartContentType) > -1) {
       resolveMultipart(req, httpReq, extraData)
     } else {
       req.pipe(httpReq)
