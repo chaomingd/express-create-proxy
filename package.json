@@ -1,6 +1,6 @@
 {
   "name": "express-create-proxy",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -19,7 +19,7 @@
     "express-proxy-request",
     "proxy-request-middleware"
   ],
-  "author": "",
+  "author": "chaomingd",
   "license": "ISC",
   "dependencies": {
     "combined-stream": "^1.0.8",

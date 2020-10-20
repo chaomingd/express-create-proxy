@@ -112,14 +112,26 @@ function proxyRequest(req, res, url, httpOptions = {}) {
   })
   // Ensure we abort proxy if request is aborted
   req.on('aborted', (e) => {
-    httpReq.abort()
+    if (httpReq.destroy) {
+      httpReq.destroy()
+    } else {
+      httpReq.abort() // Added in: v0.3.8Deprecated since: v14.1.0   Stability: 0 - Deprecated: Use request.destroy() instead.
+    }
     console.error(e)
   })
   req.on('error', (e) => {
-    httpReq.abort()
+    if (httpReq.destroy) {
+      httpReq.destroy()
+    } else {
+      httpReq.abort() // Added in: v0.3.8Deprecated since: v14.1.0   Stability: 0 - Deprecated: Use request.destroy() instead.
+    }
     console.error(e)
   })
   httpReq.on('response', httpRes => {
+    const headers = httpRes.headers
+    Object.keys(headers).forEach(key => {
+      res.set(key, headers[key])
+    })
     res.status(httpRes.statusCode)
     httpRes.pipe(res)
   })
@@ -131,7 +143,6 @@ function proxyRequest(req, res, url, httpOptions = {}) {
     res.status(500).send('request aborted')
   })
   sendRequestData(req, httpReq, resetOptions.data)
-  console.error(e)
 }
 
 const multipartContentType = 'multipart/form-data'
@@ -155,10 +166,13 @@ function sendRequestData(req, httpReq, extraData) {
   }
 }
 function resolveJson(req, httpReq, extraData) {
+  const transferEncoding = req.get('transfer-encoding')
   if (extraData) {
     if (req.body) {
       const resBody = Buffer.from(JSON.stringify({ ...req.body, ...extraData }))
-      httpReq.setHeader('content-length', resBody.length)
+      if (transferEncoding !== 'chunked') {
+        httpReq.setHeader('content-length', resBody.length)
+      }
       httpReq.end(resBody)
     } else {
       let body = ''
@@ -169,7 +183,9 @@ function resolveJson(req, httpReq, extraData) {
         try {
           let data = JSON.parse(body)
           const resBody = Buffer.from(JSON.stringify({ ...data, ...extraData }))
-          httpReq.setHeader('content-length', resBody.length)
+          if (transferEncoding !== 'chunked') {
+            httpReq.setHeader('content-length', resBody.length)
+          }
           httpReq.end(resBody)
         } catch (e) {
           httpReq.emit('error', e)
@@ -177,17 +193,20 @@ function resolveJson(req, httpReq, extraData) {
       })
     }
   } else {
-    if (req.get('content-length')) {
-      httpReq.setHeader('content-length', req.get('content-length'))
+    if (transferEncoding !== 'chunked') {
+      httpReq.setHeader('content-length', req.get('content-length') || 0)
     }
     req.pipe(httpReq)
   }
 }
 function resolveUrlEncoded(req, httpReq, extraData) {
+  const transferEncoding = req.get('transfer-encoding')
   if (extraData) {
     if (req.body) {
       const resBody = Buffer.from(qs.stringify({ ...req.body, ...extraData }))
-      httpReq.setHeader('content-length', resBody.length)
+      if (transferEncoding !== 'chunked') {
+        httpReq.setHeader('content-length', resBody.length)
+      }
       httpReq.end(resBody)
     } else {
       let body = ''
@@ -198,7 +217,9 @@ function resolveUrlEncoded(req, httpReq, extraData) {
         try {
           let data = qs.parse(body)
           const resBody = Buffer.from(qs.stringify({ ...data, ...extraData }))
-          httpReq.setHeader('content-length', resBody.length)
+          if (transferEncoding !== 'chunked') {
+            httpReq.setHeader('content-length', resBody.length)
+          }
           httpReq.end(resBody)
         } catch (e) {
           httpReq.emit('error', e)
@@ -206,25 +227,28 @@ function resolveUrlEncoded(req, httpReq, extraData) {
       })
     }
   } else {
-    if (req.get('content-length')) {
-      httpReq.setHeader('content-length', req.get('content-length'))
+    if (transferEncoding !== 'chunked') {
+      httpReq.setHeader('content-length', req.get('content-length') || 0)
     }
     req.pipe(httpReq)
   }
 }
 function resolveMultipart(req, httpReq, extraData) {
+  const contentLength = +req.get('content-length') || 0
+  const transferEncoding = req.get('transfer-encoding')
   if (extraData) {
-    const contentLength = +req.get('content-length') || 0
     const formData = new FormData()
     const boundary = getBoundaryFromContentType(req.get('content-type'))
     formData.setBoundary(boundary) // set boundary width front client's boundary
     formData.build(extraData)
     formData.form.append(req)
-    httpReq.setHeader('content-length', contentLength + formData.length)
+    if (transferEncoding !== 'chunked') {
+      httpReq.setHeader('content-length', contentLength + formData.length)
+    }
     formData.pipe(httpReq, {hasTail: false})
   } else {
-    if (req.get('content-length')) {
-      httpReq.setHeader('content-length', req.get('content-length'))
+    if (transferEncoding !== 'chunked') {
+      httpReq.setHeader('content-length', contentLength)
     }
     req.pipe(httpReq)
   }
