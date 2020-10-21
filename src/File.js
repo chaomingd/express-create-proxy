@@ -2,6 +2,7 @@ const fs = require('fs')
 const pathLib = require('path')
 const mime = require('mime-types')
 const { isObject } = require('./util')
+
 class File {
   constructor(path, options) {
     if (!path) throw new Error('path is required')
@@ -16,7 +17,7 @@ class File {
     this.source = fs.createReadStream(path)
   }
   isAbsolutePath(path) {
-    return /^\//.test(path)
+    return pathLib.isAbsolute(path)
   }
   getSize() {
     if (!this.path) return 0
