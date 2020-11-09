@@ -7,7 +7,8 @@ const {
   generateRule,
   urlNormalize,
   isObject,
-  getBoundaryFromContentType
+  getBoundaryFromContentType,
+  stripBOM
 } = require('./util')
 const { FormData } = require('./FormData')
 const HTTPClientMap = {
@@ -30,7 +31,7 @@ const defaultOptions = {
 }
 
 const emptyObject = {}
-function request(url, { params, method, ...options } = {}) {
+function request (url, { params, method, ...options } = {}) {
   params = params || emptyObject
   options = options || emptyObject
   const redirect = options.redirect || false
@@ -54,20 +55,25 @@ function request(url, { params, method, ...options } = {}) {
     ...options
   }
   const httpRequest = HTTPClient.request(requestOptions)
+  if (options.timeout) {
+    httpReq.setTimeout(options.timeout, () => {
+      httpReq.abort();
+    })
+  }
   return httpRequest
 }
-function createProxy(options = { proxy, requestOptions }) {
+function createProxy (options = { proxy, requestOptions }) {
   const proxy = options.proxy || ''
   const requestOptions = options.requestOptions
   if (typeof proxy !== 'string' && !isObject(proxy)) throw new Error('proxy must be string or object')
   if (typeof proxy === 'string') {
     return (req, res) => {
-      proxyRequest(req, res, proxy + req.baseUrl + req.url, requestOptions)
+      proxyRequest(req, res, proxy + req.originalUrl, requestOptions)
     }
   }
   const ruleCahes = generateRule(proxy)
   return (req, res, next) => {
-    const requestUrl = req.baseUrl + req.url
+    const requestUrl = req.originalUrl
     const rule = ruleCahes.find(item => item.rule.test(requestUrl))
     if (rule) {
       const proxyConfig = rule.value
@@ -92,8 +98,7 @@ function createProxy(options = { proxy, requestOptions }) {
     }
   }
 }
-
-function proxyRequest(req, res, url, httpOptions = {}) {
+function proxyRequest (req, res, url, httpOptions = {}, responseCallback) {
   httpOptions = httpOptions || {}
   let requestOptions = httpOptions
   httpOptions.beforeRequest && (requestOptions = httpOptions.beforeRequest(req, res, requestOptions))
@@ -128,12 +133,8 @@ function proxyRequest(req, res, url, httpOptions = {}) {
     console.error(e)
   })
   httpReq.on('response', httpRes => {
-    const headers = httpRes.headers
-    Object.keys(headers).forEach(key => {
-      res.set(key, headers[key])
-    })
-    res.status(httpRes.statusCode)
-    httpRes.pipe(res)
+    httpOptions.onResponse && httpOptions.onResponse(httpRes)
+    resolveResponse(httpOptions, httpRes, res, responseCallback)
   })
   httpReq.on('error', e => {
     res.status(500).send(e.message)
@@ -142,30 +143,73 @@ function proxyRequest(req, res, url, httpOptions = {}) {
   httpReq.on('aborted', e => {
     res.status(500).send('request aborted')
   })
-  sendRequestData(req, httpReq, resetOptions.data)
+  sendRequestData(req, res, httpReq, resetOptions.data)
+}
+
+function resolveResponse (httpOptions, httpRes, res, responseCallback) {
+  const headers = httpRes.headers
+  Object.keys(headers).forEach(key => {
+    res.set(key, headers[key])
+  })
+  res.status(httpRes.statusCode)
+  if (responseCallback) {
+    try {
+      if (httpOptions.responseType === 'stream') {
+        responseCallback(httpRes)
+      } else {
+        const responseBuffer = []
+        httpRes.on('data', chunk => {
+          responseBuffer.push(chunk)
+        })
+        httpRes.on('end', () => {
+          let responseData = Buffer.concat(responseBuffer)
+          if (httpOptions.responseType !== 'arraybuffer') {
+            responseData = responseData.toString(httpOptions.responseEncoding)
+            if (!httpOptions.responseEncoding || httpOptions.responseEncoding === 'utf8') {
+              responseData = stripBOM(responseData)
+            }
+            try {
+              responseData = JSON.parse(responseData)
+            } catch (error) {
+            }
+          }
+          responseCallback(responseData)
+        })
+      }
+    } catch (e) {
+      console.error(e)
+      res.status(500).send(e.message)
+    }
+  } else {
+    httpRes.pipe(res)
+  }
 }
 
 const multipartContentType = 'multipart/form-data'
 const jsonContentType = 'application/json'
 const urlEncodedContentType = 'application/x-www-form-urlencoded'
 const noBodyMethods = ['GET', 'HEAD', 'DELETE', 'OPTIONS']
-function sendRequestData(req, httpReq, extraData) {
-  if (noBodyMethods.some(method => method === req.method)) {
-    httpReq.end()
-  } else {
-    const contentType = req.get('content-type')
-    if (contentType.indexOf(jsonContentType) > -1) {
-      resolveJson(req, httpReq, extraData)
-    } else if (contentType.indexOf(urlEncodedContentType) > -1) {
-      resolveUrlEncoded(req, httpReq, extraData)
-    } else if (contentType.indexOf(multipartContentType) > -1) {
-      resolveMultipart(req, httpReq, extraData)
+function sendRequestData (req, res, httpReq, extraData) {
+  try {
+    if (noBodyMethods.some(method => method === req.method)) {
+      httpReq.end()
     } else {
-      req.pipe(httpReq)
+      const contentType = req.get('content-type')
+      if (contentType.indexOf(jsonContentType) > -1) {
+        resolveJson(req, httpReq, extraData)
+      } else if (contentType.indexOf(urlEncodedContentType) > -1) {
+        resolveUrlEncoded(req, httpReq, extraData)
+      } else if (contentType.indexOf(multipartContentType) > -1) {
+        resolveMultipart(req, httpReq, extraData)
+      } else {
+        req.pipe(httpReq)
+      }
     }
+  } catch (error) {
+    res.status(500).send(error.message)
   }
 }
-function resolveJson(req, httpReq, extraData) {
+function resolveJson (req, httpReq, extraData) {
   const transferEncoding = req.get('transfer-encoding')
   if (extraData) {
     if (req.body) {
@@ -199,7 +243,7 @@ function resolveJson(req, httpReq, extraData) {
     req.pipe(httpReq)
   }
 }
-function resolveUrlEncoded(req, httpReq, extraData) {
+function resolveUrlEncoded (req, httpReq, extraData) {
   const transferEncoding = req.get('transfer-encoding')
   if (extraData) {
     if (req.body) {
@@ -233,7 +277,7 @@ function resolveUrlEncoded(req, httpReq, extraData) {
     req.pipe(httpReq)
   }
 }
-function resolveMultipart(req, httpReq, extraData) {
+function resolveMultipart (req, httpReq, extraData) {
   const contentLength = +req.get('content-length') || 0
   const transferEncoding = req.get('transfer-encoding')
   if (extraData) {
@@ -245,7 +289,7 @@ function resolveMultipart(req, httpReq, extraData) {
     if (transferEncoding !== 'chunked') {
       httpReq.setHeader('content-length', contentLength + formData.length)
     }
-    formData.pipe(httpReq, {hasTail: false})
+    formData.pipe(httpReq, { hasTail: false })
   } else {
     if (transferEncoding !== 'chunked') {
       httpReq.setHeader('content-length', contentLength)

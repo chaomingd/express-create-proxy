@@ -30,11 +30,19 @@ const proxy = createProxy({
           'Cookie': 'Webstorm-57d294ec=123'
         }
       }
+    },
+    onResponse(httpRes) {
+      console.log('onresponse')
     }
   }
 })
 app.use(express.static(path.resolve(__dirname, '../public')))
-app.use(proxy)
+app.use((req, res) => {
+  proxyRequest(req, res, 'http://localhost:3002' + req.originalUrl, {}, body => {
+    console.log(body)
+    res.send(body)
+  })
+})
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json())
 

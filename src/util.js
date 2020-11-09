@@ -43,6 +43,19 @@ function trim(str) {
   return str.replace(trimReg, '')
 }
 
+/**
+ * Remove byte order marker. This catches EF BB BF (the UTF-8 BOM)
+ *
+ * @param {string} content with BOM
+ * @return {string} content value without BOM
+ */
+function stripBOM(content) {
+  if (content.charCodeAt(0) === 0xFEFF) {
+    content = content.slice(1);
+  }
+  return content;
+}
+
 module.exports = {
   upperFirstCase,
   generateRule,
@@ -51,5 +64,6 @@ module.exports = {
   isBuf,
   isStream,
   getBoundaryFromContentType,
-  trim
+  trim,
+  stripBOM
 }
