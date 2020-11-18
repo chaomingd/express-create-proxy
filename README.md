@@ -89,7 +89,9 @@ const proxy = createProxy({
           ...(options.headers || {})
         }
       }
-    }
+    },
+    onResponse (httpRes) { // http.ServerResponse
+    },
   }
 })
 ```
@@ -101,14 +103,68 @@ const proxy = createProxy({
 ```javascript
 const { proxyRequest } = require('express-create-proxy')
 app.get('/api/test', (req, res) => {
-  proxyRequest(req, res, req.baseUrl + req.url, {
+  const target = 'http://localhost:3002'
+  proxyRequest(req, res, target + req.originalUrl, {
     params: {}, // aditional params
     data: {}, // aditional data
     headers: {}, // aditional headers
-    // beforeRequest(req, res, options) {
-    //   return options
-    // }
+    redirect: false, // is redirection supported
+    beforeRequest(req, res, options) {
+      return options
+    },
+    onResponse (httpRes) { // http.ServerResponse
+    },
   })
+})
+
+// redirect
+const { proxyRequest } = require('express-create-proxy')
+app.get('/api/test', (req, res) => {
+  const target = 'http://localhost:3002'
+  proxyRequest(req, res, target + req.originalUrl, {
+    params: {}, // aditional params
+    data: {}, // aditional data
+    headers: {}, // aditional headers
+    redirect: true // is redirection supported
+  })
+})
+
+// custom responseData
+const { proxyRequest } = require('express-create-proxy')
+app.get('/api/json', (req, res) => {
+  const target = 'http://localhost:3002'
+  function responseCallback (resData) {
+    const data = {
+      ...resData,
+      name: 'jack'
+    }
+    res.send(data)
+  }
+  proxyRequest(req, res, target + req.originalUrl, {
+    params: {}, // aditional params
+    data: {}, // aditional data
+    headers: {}, // aditional headers
+    redirect: true, // is redirection supported
+  }, responseCallback)
+})
+
+
+// stream download
+const { proxyRequest } = require('express-create-proxy')
+app.get('/api/download', (req, res) => {
+  const target = 'http://localhost:3002'
+  function responseCallback (resStream) {
+    res.set('Content-Disposition', 'attachment; filename="download.jpg"')
+    res.set('Content-Type', 'image/jpeg')
+    resStream.pipe(res)
+  }
+  proxyRequest(req, res, target + req.originalUrl, {
+    params: {}, // aditional params
+    data: {}, // aditional data
+    headers: {}, // aditional headers
+    redirect: true, // is redirection supported
+    responseType: 'stream'
+  }, responseCallback)
 })
 ```
 
