@@ -11,7 +11,22 @@
   <input type="file" id="file">
   <button id="json">json</button>
   <button id="urlencoded">urlencoded</button>
+  <button id="https">https</button>
   <script>
+    var httpsBtn = document.getElementById('https')
+    httpsBtn.addEventListener('click', () => {
+      fetch('/api/authz/oauth/token?username=zl&password=1&grant_type=password&scope=read', {
+        method: 'get',
+        headers: {
+          'Authorization': 'Basic Y2xpZW50OnNlY3JldA=='
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log(data)
+        })
+    })
+    
     var fileInput = document.getElementById('file')
     fileInput.addEventListener('change', function (e) {
       var formData = new FormData()

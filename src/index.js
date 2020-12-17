@@ -3,6 +3,7 @@ const http = require('http')
 const https = require('https')
 const urlLib = require('url')
 const qs = require('qs')
+// process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const {
   generateRule,
   urlNormalize,
@@ -49,7 +50,7 @@ function request (url, { params, method, ...options } = {}) {
   const HTTPClient = redirect ? redirectsHTTPClientMap[urlObj.protocol] : HTTPClientMap[urlObj.protocol]
   const requestOptions = {
     hostname: urlObj.hostname || defaultOptions.hostname,
-    port: urlObj.port || defaultOptions.port,
+    port: getPort(urlObj.port, urlObj.protocol) || defaultOptions.port,
     path: urlObj.pathname + urlSearch,
     method: method || 'get',
     ...options
@@ -61,6 +62,11 @@ function request (url, { params, method, ...options } = {}) {
     })
   }
   return httpRequest
+}
+function getPort (port, protocol) {
+  if (port) return port
+  if (protocol === 'https:') return 443
+  if (protocal === 'http:') return 80
 }
 function createProxy (options = { proxy, requestOptions }) {
   const proxy = options.proxy || ''
