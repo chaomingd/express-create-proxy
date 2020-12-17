@@ -57,8 +57,8 @@ function request (url, { params, method, ...options } = {}) {
   }
   const httpRequest = HTTPClient.request(requestOptions)
   if (options.timeout) {
-    httpReq.setTimeout(options.timeout, () => {
-      httpReq.abort();
+    httpRequest.setTimeout(options.timeout, () => {
+      httpRequest.abort();
     })
   }
   return httpRequest
