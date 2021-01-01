@@ -116,7 +116,7 @@ app.get('/api/test', (req, res) => {
     beforeRequest(req, res, options) {
       return options
     },
-    onResponse (httpRes) { // http.ServerResponse
+    onResponse (httpRes, httpReq) { // http.ServerResponse, http.ClientRequest
     },
   })
 })

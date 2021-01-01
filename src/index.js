@@ -141,7 +141,7 @@ function proxyRequest (req, res, url, httpOptions = {}, responseCallback) {
     console.error(e)
   })
   httpReq.on('response', httpRes => {
-    httpOptions.onResponse && httpOptions.onResponse(httpRes)
+    httpOptions.onResponse && httpOptions.onResponse(httpRes, httpReq)
     resolveResponse(httpOptions, httpRes, res, responseCallback)
   })
   httpReq.on('error', e => {
