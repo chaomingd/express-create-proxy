@@ -94,7 +94,7 @@ const proxy = createProxy({
       console.log(url) // request url
       console.log(httpOptions) // request options
     },
-    onResponse (httpRes) { // http.ServerResponse
+    onResponse (httpRes, httpReq) { // http.ServerResponse, http.ClientRequest
     },
   }
 })
