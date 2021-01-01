@@ -90,6 +90,10 @@ const proxy = createProxy({
         }
       }
     },
+    onRequest (url, httpOptions, httpReq) { // when send http request
+      console.log(url) // request url
+      console.log(httpOptions) // request options
+    },
     onResponse (httpRes) { // http.ServerResponse
     },
   }

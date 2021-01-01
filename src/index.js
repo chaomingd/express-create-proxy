@@ -112,7 +112,7 @@ function proxyRequest (req, res, url, httpOptions = {}, responseCallback) {
   const clientHeaders = { ...req.headers }
   delete clientHeaders['content-length'] // 
   if (resetOptions.data && !isObject(resetOptions.data)) throw new Error('data must be object')
-  const httpReq = request(url, {
+  const httpRequestOptions = { // request options
     method: req.method,
     headers: {
       ...clientHeaders,
@@ -120,7 +120,9 @@ function proxyRequest (req, res, url, httpOptions = {}, responseCallback) {
       ...(headers || {}),
     },
     ...resetOptions
-  })
+  }
+  const httpReq = request(url, httpRequestOptions)
+  httpOptions.onRequest && httpOptions.onRequest(url, httpRequestOptions, httpReq)
   // Ensure we abort proxy if request is aborted
   req.on('aborted', (e) => {
     if (httpReq.destroy) {

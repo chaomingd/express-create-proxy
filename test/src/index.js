@@ -31,18 +31,17 @@ const proxy = createProxy({
         }
       }
     },
+    onRequest (url, httpOptions, httpReq) {
+      console.log(url)
+      console.log(httpOptions)
+    },
     onResponse(httpRes) {
       console.log('onresponse')
     }
   }
 })
 app.use(express.static(path.resolve(__dirname, '../public')))
-app.use((req, res) => {
-  proxyRequest(req, res, 'http://localhost:3002' + req.originalUrl, {}, body => {
-    console.log(body)
-    res.send(body)
-  })
-})
+app.use(proxy)
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json())
 
