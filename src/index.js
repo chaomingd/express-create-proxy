@@ -66,7 +66,7 @@ function request (url, { params, method, ...options } = {}) {
 function getPort (port, protocol) {
   if (port) return port
   if (protocol === 'https:') return 443
-  if (protocal === 'http:') return 80
+  if (protocol === 'http:') return 80
 }
 function createProxy (options = { proxy, requestOptions }) {
   const proxy = options.proxy || ''
