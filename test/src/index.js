@@ -31,9 +31,9 @@ const proxy = createProxy({
         }
       }
     },
-    onRequest (url, httpOptions, httpReq) {
-      console.log(url)
-      console.log(httpOptions)
+    onRequest (url, httpOptions, httpReq, req, res) {
+      console.log(httpReq.getHeader('origin'))
+      console.log(httpReq.getHeader('host'))
     },
     onResponse(httpRes) {
       console.log('onresponse')

@@ -48,6 +48,8 @@ function request (url, { params, method, ...options } = {}) {
   const searchParams = qs.stringify(urlParams)
   const urlSearch = searchParams ? '?' + searchParams : ''
   const HTTPClient = redirect ? redirectsHTTPClientMap[urlObj.protocol] : HTTPClientMap[urlObj.protocol]
+  const autoChangeHost = options.autoChangeHost !== false ? true : false
+  const autoChangOrigin = options.autoChangOrigin !== false ? true: false
   const requestOptions = {
     hostname: urlObj.hostname || defaultOptions.hostname,
     port: getPort(urlObj.port, urlObj.protocol) || defaultOptions.port,
@@ -60,6 +62,14 @@ function request (url, { params, method, ...options } = {}) {
     httpRequest.setTimeout(options.timeout, () => {
       httpRequest.abort();
     })
+  }
+  if (autoChangeHost) {
+    if (urlObj.host) {
+      httpRequest.setHeader('host', urlObj.host)
+    }
+  }
+  if (autoChangOrigin) {
+    httpRequest.setHeader('origin', urlObj.protocol + '//' + urlObj.host)
   }
   return httpRequest
 }
@@ -122,7 +132,7 @@ function proxyRequest (req, res, url, httpOptions = {}, responseCallback) {
     ...resetOptions
   }
   const httpReq = request(url, httpRequestOptions)
-  httpOptions.onRequest && httpOptions.onRequest(url, httpRequestOptions, httpReq)
+  httpOptions.onRequest && httpOptions.onRequest(url, httpRequestOptions, httpReq, req, res)
   // Ensure we abort proxy if request is aborted
   req.on('aborted', (e) => {
     if (httpReq.destroy) {
@@ -130,7 +140,7 @@ function proxyRequest (req, res, url, httpOptions = {}, responseCallback) {
     } else {
       httpReq.abort() // Added in: v0.3.8Deprecated since: v14.1.0   Stability: 0 - Deprecated: Use request.destroy() instead.
     }
-    console.error(e)
+    console.log(e.message)
   })
   req.on('error', (e) => {
     if (httpReq.destroy) {
@@ -138,15 +148,24 @@ function proxyRequest (req, res, url, httpOptions = {}, responseCallback) {
     } else {
       httpReq.abort() // Added in: v0.3.8Deprecated since: v14.1.0   Stability: 0 - Deprecated: Use request.destroy() instead.
     }
-    console.error(e)
+    console.log(e.message)
+  })
+  res.on('error', e => {
+    if (httpReq.destroy) {
+      httpReq.destroy()
+    } else {
+      httpReq.abort() // Added in: v0.3.8Deprecated since: v14.1.0   Stability: 0 - Deprecated: Use request.destroy() instead.
+    }
+    res.status(500).send(e.message)
+    console.log(e.message)
   })
   httpReq.on('response', httpRes => {
-    httpOptions.onResponse && httpOptions.onResponse(httpRes, httpReq)
+    httpOptions.onResponse && httpOptions.onResponse(httpRes, httpReq, res, req)
     resolveResponse(httpOptions, httpRes, res, responseCallback)
   })
   httpReq.on('error', e => {
     res.status(500).send(e.message)
-    console.error(e)
+    console.log(e.message)
   })
   httpReq.on('aborted', e => {
     res.status(500).send('request aborted')
@@ -185,7 +204,7 @@ function resolveResponse (httpOptions, httpRes, res, responseCallback) {
         })
       }
     } catch (e) {
-      console.error(e)
+      console.log(e.message)
       res.status(500).send(e.message)
     }
   } else {

@@ -90,11 +90,11 @@ const proxy = createProxy({
         }
       }
     },
-    onRequest (url, httpOptions, httpReq) { // when send http request
+    onRequest (url, httpOptions, httpReq, req, res) { // when send http request
       console.log(url) // request url
       console.log(httpOptions) // request options
     },
-    onResponse (httpRes, httpReq) { // http.ServerResponse, http.ClientRequest
+    onResponse (httpRes, httpReq, res, req) { // http.ServerResponse, http.ClientRequest
     },
   }
 })
