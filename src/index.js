@@ -134,13 +134,12 @@ function proxyRequest (req, res, url, httpOptions = {}, responseCallback) {
   const httpReq = request(url, httpRequestOptions)
   httpOptions.onRequest && httpOptions.onRequest(url, httpRequestOptions, httpReq, req, res)
   // Ensure we abort proxy if request is aborted
-  req.on('aborted', (e) => {
+  req.on('aborted', () => {
     if (httpReq.destroy) {
       httpReq.destroy()
     } else {
       httpReq.abort() // Added in: v0.3.8Deprecated since: v14.1.0   Stability: 0 - Deprecated: Use request.destroy() instead.
     }
-    console.log(e.message)
   })
   req.on('error', (e) => {
     if (httpReq.destroy) {
@@ -148,7 +147,6 @@ function proxyRequest (req, res, url, httpOptions = {}, responseCallback) {
     } else {
       httpReq.abort() // Added in: v0.3.8Deprecated since: v14.1.0   Stability: 0 - Deprecated: Use request.destroy() instead.
     }
-    console.log(e.message)
   })
   res.on('error', e => {
     if (httpReq.destroy) {
