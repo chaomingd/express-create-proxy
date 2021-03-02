@@ -27,7 +27,6 @@ request.defaults = {
 
 const defaultOptions = {
   hostname: 'localhost',
-  port: 80,
   protocol: 'http:'
 }
 
@@ -52,7 +51,7 @@ function request (url, { params, method, ...options } = {}) {
   const autoChangOrigin = options.autoChangOrigin !== false ? true: false
   const requestOptions = {
     hostname: urlObj.hostname || defaultOptions.hostname,
-    port: getPort(urlObj.port, urlObj.protocol) || defaultOptions.port,
+    port: urlObj.port,
     path: urlObj.pathname + urlSearch,
     method: method || 'get',
     ...options
@@ -159,6 +158,10 @@ function proxyRequest (req, res, url, httpOptions = {}, responseCallback) {
   })
   httpReq.on('response', httpRes => {
     httpOptions.onResponse && httpOptions.onResponse(httpRes, httpReq, res, req)
+    httpRes.on('error', e => {
+      if (httpReq.aborted) return
+      res.status(500).send(e.message)
+    })
     resolveResponse(httpOptions, httpRes, res, responseCallback)
   })
   httpReq.on('error', e => {

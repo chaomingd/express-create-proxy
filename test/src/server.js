@@ -31,6 +31,6 @@ router.post('/another/file', upload.any(), (req, res) => {
 router.post('/api/proxy-request', (req, res) => {
   res.send(req.body)
 })
-app.listen(3002, () => {
+app.listen(80, () => {
   console.log('start at 3002')
 })

@@ -6,7 +6,7 @@ const { createProxy, File, proxyRequest, FormData, request } = require('../../sr
 const proxy = createProxy({
   proxy: {
     '^/api': {
-      target: 'http://localhost:3002',
+      target: 'http://localhost',
     },
     '^/another': {
       target: 'http://localhost:3003'
